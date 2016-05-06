@@ -73,11 +73,12 @@ class GuessANumberApi(remote.Service):
                     'A User with that name does not exist!')
         try:
             game = Game(parent = user.key).new_game(user.key, request.min,
-                                 request.max, request.attempts)
+                                 request.max, request.attempts,0)
         except ValueError:
             raise endpoints.BadRequestException('Maximum must be greater '
                                                 'than minimum!')
-        random_number = random.choice(range(0, len(Questions)-1))
+        random_number = random.randint(0, 2)
+        # random_number = random.choice(range(0, len(Questions)))
         game.radom_number_assigned=random_number
         message_to_send="Your question is : "+Questions[random_number]+"Please use make_move api to proceed."
         # Use a task queue to update the average attempts remaining.
@@ -220,14 +221,20 @@ class GuessANumberApi(remote.Service):
         game.all_movess.append(str(request.guess))
 
         game.attempts_remaining -= 1
-        if request.guess == Answers[game.radom_number_assigned]:
+
+        if str(request.guess) == str(Answers[game.random_number_assigned]):
             game.end_game(True)
             return game.to_form('You win!')
-
-        if request.guess < Answers[game.radom_number_assigned]:
-            msg = 'Too low!'
         else:
-            msg = 'Too high!'
+          if game.attempts_remaining >= 1:
+            return game.to_form('Try again!')
+
+        # if request.guess < Answers[game.radom_number_assigned]:
+        #     msg = 'Too low!'
+        # else:
+        #     msg = 'Too high!'
+
+
 
         if game.attempts_remaining < 1:
             game.end_game(False)

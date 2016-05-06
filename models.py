@@ -32,7 +32,7 @@ class Game(ndb.Model):
 
     @classmethod
     #classmethod is like static method(can call with class and instance as well) with 'cls' implicitly passed.
-    def new_game(cls, user, min, max, attempts):
+    def new_game(cls, user, min, max, attempts,random_number_assigned):
         """Creates and returns a new game"""
         if max < min:
             raise ValueError('Maximum must be greater than minimum')
@@ -41,7 +41,8 @@ class Game(ndb.Model):
                     attempts_allowed=attempts,
                     attempts_remaining=attempts,
                     game_over=False,
-                    parent=user)
+                    parent=user,
+                    random_number_assigned=random_number_assigned)
         game.put()
         return game
 
