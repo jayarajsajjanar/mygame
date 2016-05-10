@@ -23,7 +23,7 @@ class Game(ndb.Model):
     """Game object"""
     target = ndb.IntegerProperty(required=True)
     attempts_allowed = ndb.IntegerProperty(required=True)
-    attempts_remaining = ndb.IntegerProperty(required=True, default=5)
+    attempts_remaining = ndb.IntegerProperty(required=True, default = 5)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
     all_movess = ndb.StringProperty(repeated = True)
@@ -114,7 +114,7 @@ class Score(ndb.Model):
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
-    attempts_remaining = messages.IntegerField(2, required=True)
+    attempts_remaining = messages.IntegerField(2, required=True, default = 5)
     game_over = messages.BooleanField(3, required=True)
     message = messages.StringField(4, required=True)
     user_name = messages.StringField(5, required=True)
@@ -128,12 +128,12 @@ class NewGameForm(messages.Message):
     user_name = messages.StringField(1, required=True)
     min = messages.IntegerField(2, default=1)
     max = messages.IntegerField(3, default=10)
-    attempts = messages.IntegerField(4, default=5)
+    attempts = messages.IntegerField(4, default = 5)
 
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
-    guess = messages.IntegerField(1, required=True)
+    guess = messages.StringField(1, required=True)
 
 class AllMovesForm(messages.Message):
     """Used to display all moves of an existing game"""
