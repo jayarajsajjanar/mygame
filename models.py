@@ -4,7 +4,7 @@ classes they can include methods (such as 'to_form' and 'new_game')."""
 
 import random
 from datetime import date
-from protorpc import messages
+from protorpc import messages   
 from google.appengine.ext import ndb
 
 
@@ -12,11 +12,11 @@ class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
     email =ndb.StringProperty()
-    total_points=ndb.IntegerProperty(required=True)
+    total_average_points=ndb.IntegerProperty(required=True)
     total_guesses=ndb.IntegerProperty(required=True)
 
     def to_form_toprankings(self):
-        return TopRankingForm(name=self.name, email=self.email, total_points=self.total_points, total_guesses=self.total_guesses)
+        return TopRankingForm(name=self.name, email=self.email, total_average_points=self.total_average_points, total_guesses=self.total_guesses)
 
 
 class Game(ndb.Model):
@@ -100,13 +100,14 @@ class Score(ndb.Model):
                          date=str(self.date), guesses=self.guesses)
     
     def cal_toprankings(self):
-        game_score=12-2*self.guesses
-        self.user.get().total_points=self.user.get().total_points+game_score
-        self.user.get().total_guesses=self.user.get().total_guesses+self.guesses
-        self.user.get().put()
+        if self.won == True:
+            game_score=12-2*self.guesses
+            self.user.get().total_guesses=self.user.get().total_guesses+self.guesses
+            self.user.get().total_average_points=(self.user.get().total_average_points+game_score)/self.user.get().total_guesses
+            self.user.get().put()
 
     def to_form_toprankings(self):
-        return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_points=self.user.get().total_points, total_guesses=self.user.get().total_guesses)
+        return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_average_points=self.user.get().total_average_points, total_guesses=self.user.get().total_guesses)
 
 
 
@@ -151,7 +152,7 @@ class TopRankingForm(messages.Message):
     """TopRankingForm for outbound top ranking information"""
     name = messages.StringField(1, required=True)
     email = messages.StringField(2, required=True)
-    total_points = messages.IntegerField(3, required=True, default=0)
+    total_average_points = messages.IntegerField(3, required=True, default=0)
     total_guesses = messages.IntegerField(4, required=True, default=0)
 
 class TopRankingForms(messages.Message):

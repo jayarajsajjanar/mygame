@@ -24,6 +24,8 @@ import random
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
         urlsafe_game_key=messages.StringField(1),)
+DELETE_GAME_REQUEST = endpoints.ResourceContainer(
+        urlsafe_game_key=messages.StringField(1),)
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
     urlsafe_game_key=messages.StringField(1),)
@@ -32,13 +34,17 @@ ALL_MOVES_REQUEST = endpoints.ResourceContainer(
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
 RANK_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),)
-NUMBER_OF_HIGH_SCORES = endpoints.ResourceContainer(number_of_high_scores=messages.IntegerField(1),)
+NUMBER_OF_HIGH_SCORES_SCORECARDS = endpoints.ResourceContainer(number_of_high_scores=messages.IntegerField(1),)
+NUMBER_OF_HIGH_SCORES_USERS = endpoints.ResourceContainer(number_of_high_scores=messages.IntegerField(1),)
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
 
-Questions = ['Guess my age', 'Q2', 'Q3']
-Answers = ['23','jayaraj2','jayaraj3']
+Questions = ['How many states are there in USA?', 'What is the first name of current president of America?', 
+              'Who won football world cup of 2014? ', 'In which year did first world war start?',
+              'What is the currency of Bangladesh?', 'What is the capital of England?',
+              'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
+Answers = ['50','barack','germany','1911','taka','london','thailand','365']
 
 @endpoints.api(name='guess_a_number', version='v1')
 class GuessANumberApi(remote.Service):
@@ -55,7 +61,7 @@ class GuessANumberApi(remote.Service):
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
-        user = User(name=request.user_name, email=request.email,total_points=10, total_guesses=10)
+        user = User(name=request.user_name, email=request.email,total_average_points=0, total_guesses=0)
         user.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
@@ -67,7 +73,7 @@ class GuessANumberApi(remote.Service):
                       name='new_game',
                       http_method='POST')
     def new_game(self, request):
-        """Creates new game"""
+        """Creates new game and assigns random questions."""
         user = User.query(User.name == request.user_name).get()
         if not user:
             raise endpoints.NotFoundException(
@@ -110,61 +116,25 @@ class GuessANumberApi(remote.Service):
             raise endpoints.NotFoundException('Game not found!')
 
     #************************delete_game***************************************
-    @endpoints.method(request_message=USER_REQUEST,
+    @endpoints.method(request_message=DELETE_GAME_REQUEST,
                       response_message=StringMessage,
-                      path='game/delete/{user_name}',
+                      path='game/delete',
                       name='delete_game',
-                      http_method='GET')
+                      http_method='POST')
     def delete_game(self, request):
         """Deletes a game."""
-        # all_games = ndb.query_descendants(request.user_name.get())
-        # g=ndb.query(Game).all()
-        # g.ancestor(request.user_name.get())
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
-        # # game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        # # if all_games:
-        # mess=''
-        # # for games in Game.all():
-        # ndb.query
-        # # for games in ndb.query(Game).all():
-        #   mess=mess+games.user
-        # # else:
-        # #     raise endpoints.NotFoundException('Game not found!')
-        # # temp = Game()
-        # return temp.to_form('deleted')
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgIAKDAsSBEdhbWUYgICAgICAgAsM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgIAKDAsSBEdhbWUYgICAgICAwAoM
-        # jayaraj9 - ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgMALDAsSBEdhbWUYgICAgICAoAgM
-        #jayaraj10 - ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgKAKDAsSBEdhbWUYgICAgICAoAkM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgKAKDAsSBEdhbWUYgICAgICA4AgM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgKAKDAsSBEdhbWUYgICAgICA4AkM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgKAKDAsSBEdhbWUYgICAgICA4AsM
-        #jayaraj11- ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgJAKDAsSBEdhbWUYgICAgICAkAsM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgJAKDAsSBEdhbWUYgICAgICA0AgM
-        #######User is : #######
-        cur_usr = User.query(User.name == request.user_name).get()
-        game_cur_usr=[]
-        game_cur_usr_2=[]
-        j=0
-        for i in Score.query(Score.user == cur_usr.key):
-        #k=i.get()
-          if i:
-            i.key.delete()
+        if game.game_over == False:
+          game.key.delete()
+          msg="The game is cancelled."
+        else:
+          msg="The game is already over. Cannot cancel now."
 
-        for i in Game.query(Game.user == cur_usr.key):
-          if i:
-            i.key.delete()
 
-        #for i in Game.query(Game.user == cur_usr.key):
-          #i.delete()
-          #game_cur_usr.append(i)
-          #game_cur_usr_2.append(game_cur_usr[j].get())
-          #j=j+1
-        return StringMessage(message='Games and scores deleted')
-        #return StringMessage(message='user is  : {}'.format(game_cur_usr.name))
-        #return game_cur_usr[0].to_form("gsme returned is this!")        
-
-#************************user_games***************************************
+        return StringMessage(message=msg)
+        
+    #************************user_games***************************************
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=GameForms,
                       path='game/user_games/{user_name}',
@@ -294,7 +264,7 @@ class GuessANumberApi(remote.Service):
 
         
 
-        for user in User.query().order((-User.total_points)):
+        for user in User.query().order((-User.total_average_points)):
           ranks.append(user.name)
 
         rank = ranks.index(request.user_name) + 1
@@ -316,14 +286,17 @@ class GuessANumberApi(remote.Service):
         """Return all scores"""
         return ScoreForms(items=[score.to_form() for score in Score.query()])
 
-    #************************get_high_scores***************************************
-    @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES,
+
+
+
+    #************************get_high_scores_scorecards***************************************
+    @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_SCORECARDS,
                       response_message=HighScoreForms,
-                      path='highscores',
-                      name='get_high_scores',
+                      path='highscores_scorecards',
+                      name='get_high_scores_scorecards',
                       http_method='GET')
-    def get_high_scores(self, request):
-        """Return high scores"""
+    def get_high_scores_scorecards(self, request):
+        """Return high scores (scorecards with highest scores in descending order)"""
         #user = User.query(User.name == request.user_name).get()
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
@@ -340,6 +313,38 @@ class GuessANumberApi(remote.Service):
 
         # return HighScoreForms()
         return HighScoreForms(high_scores=[score.to_highscore_form() for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores)])
+
+
+    #************************get_high_scores_users***************************************
+    @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_USERS,
+                      response_message=StringMessage,
+                      path='highscores_users',
+                      name='get_high_scores_users',
+                      http_method='GET')
+    def get_high_scores_users(self, request):
+        """Return high scores (users with highest scores in descending order)"""
+        #user = User.query(User.name == request.user_name).get()
+        if not request.number_of_high_scores:
+            raise endpoints.NotFoundException(
+                    'Please specify the number of high scores!!')
+        
+        # temp_least_num=5
+        # for score in Score.query():
+        #   if score.guesses<temp_least_num:
+        #     temp_least_num=score.guesses
+
+        # for score in Score.query():
+        #   high_scores=score.to_highscore_form()
+        topscores=[]
+
+        for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores):
+          topscores.append(score.user.get().name)
+
+        return StringMessage(message='Leader board in descending order is  {}'.format(topscores))
+
+        # return HighScoreForms()
+        # return HighScoreForms(high_scores=[score.to_highscore_form() for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores)])
+
 
     #************************get_user_scores***************************************
     @endpoints.method(request_message=USER_REQUEST,
