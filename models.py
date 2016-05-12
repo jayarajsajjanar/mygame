@@ -103,7 +103,7 @@ class Score(ndb.Model):
         game_score=12-2*self.guesses
         self.user.get().total_points=self.user.get().total_points+game_score
         self.user.get().total_guesses=self.user.get().total_guesses+self.guesses
-        self.put()
+        self.user.get().put()
 
     def to_form_toprankings(self):
         return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_points=self.user.get().total_points, total_guesses=self.user.get().total_guesses)

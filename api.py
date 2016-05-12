@@ -31,6 +31,7 @@ ALL_MOVES_REQUEST = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1),)
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
+RANK_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),)
 NUMBER_OF_HIGH_SCORES = endpoints.ResourceContainer(number_of_high_scores=messages.IntegerField(1),)
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
@@ -54,7 +55,7 @@ class GuessANumberApi(remote.Service):
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
-        user = User(name=request.user_name, email=request.email,total_points=0, total_guesses=0)
+        user = User(name=request.user_name, email=request.email,total_points=10, total_guesses=10)
         user.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
@@ -231,6 +232,10 @@ class GuessANumberApi(remote.Service):
         if str(request.guess) == str(Answers[game.random_number_assigned]):
             game.end_game(True)
             game.put()
+            #Below is done because of design constraints.
+            for score in Score.query():
+              score.cal_toprankings()
+
             return game.to_form('You win!')
         else:
           if game.attempts_remaining >= 1:
@@ -265,7 +270,8 @@ class GuessANumberApi(remote.Service):
 
 
     #************************get_top_rankings***************************************
-    @endpoints.method(response_message=TopRankingForms,
+    @endpoints.method(request_message=RANK_REQUEST,
+                      response_message=StringMessage,
                       path='toprankings',
                       name='get_top_rankings',
                       http_method='GET')
@@ -275,7 +281,30 @@ class GuessANumberApi(remote.Service):
         for score in Score.query():
           score.cal_toprankings()
 
-        return TopRankingForms(toprankings=[user.to_form_toprankings() for user in User.query().order((User.total_points))])
+        ranks = []
+
+        # for user in User.query().order(User.total_points):
+
+        #   ranks.append(user.name)
+
+        # for score in Score.query():
+        #   if score.won == True:
+        #     ranks[0].append(score.user.get().name)
+        #     ranks[1].append(score.guesses)
+
+        
+
+        for user in User.query().order((-User.total_points)):
+          ranks.append(user.name)
+
+        rank = ranks.index(request.user_name) + 1
+
+
+
+        return StringMessage(message='Rank is {}'.format(rank))
+        
+
+        # return TopRankingForms(toprankings=[user.to_form_toprankings() for user in User.query().order((User.total_points))])
 
 
     #************************get_scores***************************************
