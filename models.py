@@ -21,7 +21,8 @@ class User(ndb.Model):
 
 class Game(ndb.Model):
     """Game object"""
-    target = ndb.IntegerProperty(required=True)
+    #Matching is done using the database itself.(Q&A database). So no need of target.
+    #target = ndb.IntegerProperty(required=True)
     attempts_allowed = ndb.IntegerProperty(required=True)
     attempts_remaining = ndb.IntegerProperty(required=True, default = 5)
     game_over = ndb.BooleanProperty(required=True, default=False)
@@ -32,12 +33,9 @@ class Game(ndb.Model):
 
     @classmethod
     #classmethod is like static method(can call with class and instance as well) with 'cls' implicitly passed.
-    def new_game(cls, user, min, max, attempts,random_number_assigned):
+    def new_game(cls, user,attempts,random_number_assigned):
         """Creates and returns a new game"""
-        if max < min:
-            raise ValueError('Maximum must be greater than minimum')
         game = Game(user=user,
-                    target=random.choice(range(1, max + 1)),
                     attempts_allowed=attempts,
                     attempts_remaining=attempts,
                     game_over=False,
@@ -70,8 +68,6 @@ class Game(ndb.Model):
         # Add the game to the score 'board'
         score = Score(user=self.user, date=date.today(), won=won,
                       guesses=self.attempts_allowed - self.attempts_remaining)
-        # self.user.get().total_guesses=10#self.user.get().total_guesses + (self.attempts_allowed - self.attempts_remaining)
-        # self.put()
         score.put()
 
     def delete_game(self):
@@ -127,8 +123,6 @@ class GameForms(messages.Message):
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
-    min = messages.IntegerField(2, default=1)
-    max = messages.IntegerField(3, default=10)
     attempts = messages.IntegerField(4, default = 5)
 
 

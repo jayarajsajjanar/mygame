@@ -46,7 +46,7 @@ Questions = ['How many states are there in USA?', 'What is the first name of cur
               'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
 Answers = ['50','barack','germany','1911','taka','london','thailand','365']
 
-@endpoints.api(name='guess_a_number', version='v1')
+@endpoints.api(name='Quizzzz!', version='v1')
 class GuessANumberApi(remote.Service):
 
     #************************create_user***************************************
@@ -82,13 +82,11 @@ class GuessANumberApi(remote.Service):
         random_number = random.randint(0, len(Questions) - 1)
 
         try:
-            game = Game(parent = user.key).new_game(user.key, request.min,
-                                 request.max, request.attempts,random_number)
+            game = Game(parent = user.key).new_game(user.key,request.attempts,random_number)
         except ValueError:
             raise endpoints.BadRequestException('Maximum must be greater '
                                                 'than minimum!')
         
-        # random_number = random.choice(range(0, len(Questions)))
         game.radom_number_assigned=random_number
         game.put()
         
@@ -98,9 +96,7 @@ class GuessANumberApi(remote.Service):
         # so it is performed out of sequence.
         taskqueue.add(url='/tasks/cache_average_attempts')
         return game.to_form(message_to_send)
-        # return game.to_form('Good luck playing Guess a Number!')
-
-
+        
     #************************get_game***************************************
     @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=GameForm,
@@ -109,6 +105,7 @@ class GuessANumberApi(remote.Service):
                       http_method='GET')
     def get_game(self, request):
         """Return the current game state."""
+        #Real game object is returned using key.
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
             return game.to_form('Time to make a move!')
@@ -142,46 +139,11 @@ class GuessANumberApi(remote.Service):
                       http_method='GET')
     def user_games(self, request):
         """returns user games."""
-        # all_games = ndb.query_descendants(request.user_name.get())
-        # g=ndb.query(Game).all()
-        # g.ancestor(request.user_name.get())
-
-        # # game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        # # if all_games:
-        # mess=''
-        # # for games in Game.all():
-        # ndb.query
-        # # for games in ndb.query(Game).all():
-        #   mess=mess+games.user
-        # # else:
-        # #     raise endpoints.NotFoundException('Game not found!')
-        # # temp = Game()
-        # return temp.to_form('deleted')
-        #jayaraj12 - ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgNAKDAsSBEdhbWUYgICAgICA0AkM
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgNAKDAsSBEdhbWUYgICAgICAsAgM
-        #######User is : #######
         cur_usr = User.query(User.name == request.user_name).get()
-        game_cur_usr=[]
-        game_cur_usr_2=[]
-        j=0
-        # for i in Game.query(Game.user == cur_usr.key):
-        # #k=i.get()
-        #   if i:
-        #     i.key.delete()
-        #for i in Game.query(Game.user == cur_usr.key):
-          #i.delete()
-          #game_cur_usr.append(i)
-          #game_cur_usr_2.append(game_cur_usr[j].get())
-          #j=j+1
+        
         return GameForms(items=[game.to_form('user games!') for game in Game.query(Game.user == cur_usr.key)])
-        ######return StringMessage(message='deleted')
-        #return StringMessage(message='user is  : {}'.format(game_cur_usr.name))
-        #return game_cur_usr[0].to_form("gsme returned is this!")        
-
 
     #**********************make_move*****************************************
-
-
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
@@ -211,20 +173,10 @@ class GuessANumberApi(remote.Service):
           if game.attempts_remaining >= 1:
             return game.to_form('Try again!')
 
-        # if request.guess < Answers[game.radom_number_assigned]:
-        #     msg = 'Too low!'
-        # else:
-        #     msg = 'Too high!'
-
-
-
         if game.attempts_remaining < 1:
             game.end_game(False)
             return game.to_form( 'Attempts over. Game over!')
-        # else:
-        #     game.put()
-        #     return game.to_form(msg)
-
+        
     #**********************all_moves*****************************************
 
     @endpoints.method(request_message=ALL_MOVES_REQUEST,
@@ -253,17 +205,6 @@ class GuessANumberApi(remote.Service):
 
         ranks = []
 
-        # for user in User.query().order(User.total_points):
-
-        #   ranks.append(user.name)
-
-        # for score in Score.query():
-        #   if score.won == True:
-        #     ranks[0].append(score.user.get().name)
-        #     ranks[1].append(score.guesses)
-
-        
-
         for user in User.query().order((-User.total_average_points)):
           ranks.append(user.name)
 
@@ -272,10 +213,6 @@ class GuessANumberApi(remote.Service):
 
 
         return StringMessage(message='Rank is {}'.format(rank))
-        
-
-        # return TopRankingForms(toprankings=[user.to_form_toprankings() for user in User.query().order((User.total_points))])
-
 
     #************************get_scores***************************************
     @endpoints.method(response_message=ScoreForms,
@@ -286,9 +223,6 @@ class GuessANumberApi(remote.Service):
         """Return all scores"""
         return ScoreForms(items=[score.to_form() for score in Score.query()])
 
-
-
-
     #************************get_high_scores_scorecards***************************************
     @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_SCORECARDS,
                       response_message=HighScoreForms,
@@ -297,21 +231,10 @@ class GuessANumberApi(remote.Service):
                       http_method='GET')
     def get_high_scores_scorecards(self, request):
         """Return high scores (scorecards with highest scores in descending order)"""
-        #user = User.query(User.name == request.user_name).get()
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scores!!')
-        
-        # temp_least_num=5
-        # for score in Score.query():
-        #   if score.guesses<temp_least_num:
-        #     temp_least_num=score.guesses
-
-        # for score in Score.query():
-        #   high_scores=score.to_highscore_form()
-
-
-        # return HighScoreForms()
+  
         return HighScoreForms(high_scores=[score.to_highscore_form() for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores)])
 
 
@@ -323,28 +246,15 @@ class GuessANumberApi(remote.Service):
                       http_method='GET')
     def get_high_scores_users(self, request):
         """Return high scores (users with highest scores in descending order)"""
-        #user = User.query(User.name == request.user_name).get()
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scores!!')
-        
-        # temp_least_num=5
-        # for score in Score.query():
-        #   if score.guesses<temp_least_num:
-        #     temp_least_num=score.guesses
-
-        # for score in Score.query():
-        #   high_scores=score.to_highscore_form()
         topscores=[]
 
         for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores):
           topscores.append(score.user.get().name)
 
         return StringMessage(message='Leader board in descending order is  {}'.format(topscores))
-
-        # return HighScoreForms()
-        # return HighScoreForms(high_scores=[score.to_highscore_form() for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores)])
-
 
     #************************get_user_scores***************************************
     @endpoints.method(request_message=USER_REQUEST,
