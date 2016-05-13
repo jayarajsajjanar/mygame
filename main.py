@@ -6,7 +6,7 @@ import logging
 
 import webapp2
 from google.appengine.api import mail, app_identity
-from api import GuessANumberApi
+from api import Quizz
 
 from models import User,Game
 
@@ -35,7 +35,7 @@ class SendReminderEmail(webapp2.RequestHandler):
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
     def post(self):
         """Update game listing announcement in memcache."""
-        GuessANumberApi._cache_average_attempts()
+        Quizz._cache_average_attempts()
         self.response.set_status(204)
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'

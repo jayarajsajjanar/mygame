@@ -46,8 +46,8 @@ Questions = ['How many states are there in USA?', 'What is the first name of cur
               'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
 Answers = ['50','barack','germany','1911','taka','london','thailand','365']
 
-@endpoints.api(name='Quizzzz!', version='v1')
-class GuessANumberApi(remote.Service):
+@endpoints.api(name='Quizz', version='v1')
+class Quizz(remote.Service):
 
     #************************create_user***************************************
     """Game API"""
@@ -115,11 +115,11 @@ class GuessANumberApi(remote.Service):
     #************************delete_game***************************************
     @endpoints.method(request_message=DELETE_GAME_REQUEST,
                       response_message=StringMessage,
-                      path='game/delete',
-                      name='delete_game',
+                      path='game/cancel',
+                      name='cancel_game',
                       http_method='POST')
-    def delete_game(self, request):
-        """Deletes a game."""
+    def cancel_game(self, request):
+        """Cancels/deletes an unfinished game."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
         if game.game_over == False:
@@ -227,9 +227,9 @@ class GuessANumberApi(remote.Service):
     @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_SCORECARDS,
                       response_message=HighScoreForms,
                       path='highscores_scorecards',
-                      name='get_high_scores_scorecards',
+                      name='high_scores_scorecards',
                       http_method='GET')
-    def get_high_scores_scorecards(self, request):
+    def high_scores_scorecards(self, request):
         """Return high scores (scorecards with highest scores in descending order)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
@@ -242,9 +242,9 @@ class GuessANumberApi(remote.Service):
     @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_USERS,
                       response_message=StringMessage,
                       path='highscores_users',
-                      name='get_high_scores_users',
+                      name='high_scores_users',
                       http_method='GET')
-    def get_high_scores_users(self, request):
+    def high_scores_users(self, request):
         """Return high scores (users with highest scores in descending order)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
@@ -296,4 +296,4 @@ class GuessANumberApi(remote.Service):
                          'The average moves remaining is {:.2f}'.format(average))
 
 
-api = endpoints.api_server([GuessANumberApi])
+api = endpoints.api_server([Quizz])
