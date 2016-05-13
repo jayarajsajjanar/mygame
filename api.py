@@ -60,7 +60,7 @@ class quizz(remote.Service):
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
-        user = User(name=request.user_name, email=request.email,total_average_points=0, total_guesses=0)
+        user = User(name=request.user_name, email=request.email,total_points=0, total_guesses=0)
         user.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
@@ -170,7 +170,7 @@ class quizz(remote.Service):
 
             user = User.query(User.name == game.user.get().name).get()
             #Since game is won. Update both total_points and total_guesses.
-            user.total_average_points=user.total_average_points+10
+            user.total_points=user.total_points+10
             user.total_guesses=user.total_guesses+5-game.attempts_remaining
             
             user.put()
@@ -216,7 +216,7 @@ class quizz(remote.Service):
         ranks = []
 
         #Logic - Users are sorted based on their total points. If total points clash, total_guesses is used.
-        for user in User.query().order((-User.total_average_points)).order(User.total_guesses):
+        for user in User.query().order((-User.total_points)).order(User.total_guesses):
           ranks.append(user.name)
 
         rank = ranks.index(request.user_name) + 1
@@ -262,7 +262,7 @@ class quizz(remote.Service):
                     'Please specify the number of high scores!!')
         topscores=[]
 
-        for user in User.query().order(-User.total_average_points).order(User.total_guesses).fetch(request.number_of_high_scores):
+        for user in User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores):
           topscores.append(user.name)
 
         return StringMessage(message='Leader board in descending order is  {}'.format(topscores))

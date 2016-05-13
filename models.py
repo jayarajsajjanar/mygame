@@ -12,11 +12,11 @@ class User(ndb.Model):
     name = ndb.StringProperty(required=True)
     email =ndb.StringProperty()
     #The below are used in leader board/rankings.
-    total_average_points=ndb.IntegerProperty(required=True)
+    total_points=ndb.IntegerProperty(required=True)
     total_guesses=ndb.IntegerProperty(required=True) 
 
     def to_form_toprankings(self):
-        return TopRankingForm(name=self.name, email=self.email, total_average_points=self.total_average_points, total_guesses=self.total_guesses)
+        return TopRankingForm(name=self.name, email=self.email, total_points=self.total_points, total_guesses=self.total_guesses)
 
 
 class Game(ndb.Model):
@@ -97,7 +97,7 @@ class Score(ndb.Model):
                          date=str(self.date), guesses=self.guesses)
 
     def to_form_toprankings(self):
-        return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_average_points=self.user.get().total_average_points, total_guesses=self.user.get().total_guesses)
+        return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_points=self.user.get().total_points, total_guesses=self.user.get().total_guesses)
 
 
 
@@ -138,7 +138,7 @@ class TopRankingForm(messages.Message):
     """TopRankingForm for outbound top ranking information"""
     name = messages.StringField(1, required=True)
     email = messages.StringField(2, required=True)
-    total_average_points = messages.IntegerField(3, required=True, default=0)
+    total_points = messages.IntegerField(3, required=True, default=0)
     total_guesses = messages.IntegerField(4, required=True, default=0)
 
 class TopRankingForms(messages.Message):
