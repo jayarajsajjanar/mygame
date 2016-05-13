@@ -94,13 +94,6 @@ class Score(ndb.Model):
             game_score=0
         return HighScoreForm(game_score=game_score,user_name=self.user.get().name, won=self.won,
                          date=str(self.date), guesses=self.guesses)
-    
-    def cal_toprankings(self):
-        if self.won == True:
-            game_score=12-2*self.guesses
-            self.user.get().total_guesses=self.user.get().total_guesses+self.guesses
-            self.user.get().total_average_points=(self.user.get().total_average_points+game_score)/self.user.get().total_guesses
-            self.user.get().put()
 
     def to_form_toprankings(self):
         return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_average_points=self.user.get().total_average_points, total_guesses=self.user.get().total_guesses)

@@ -44,7 +44,7 @@ Questions = ['How many states are there in USA?', 'What is the first name of cur
               'Who won football world cup of 2014? ', 'In which year did first world war start?',
               'What is the currency of Bangladesh?', 'What is the capital of England?',
               'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
-Answers = ['50','barack','germany','1911','taka','london','thailand','365']
+Answers = ['50','barack','germany','1911','taka','london','thailand','366']
 
 @endpoints.api(name='quizz', version='v1')
 class quizz(remote.Service):
@@ -138,10 +138,10 @@ class quizz(remote.Service):
                       name='user_games',
                       http_method='GET')
     def user_games(self, request):
-        """returns user games."""
+        """Returns all games of the user."""
         cur_usr = User.query(User.name == request.user_name).get()
         
-        return GameForms(items=[game.to_form('user games!') for game in Game.query(Game.user == cur_usr.key)])
+        return GameForms(items=[game.to_form('user game!') for game in Game.query(Game.user == cur_usr.key)])
 
     #**********************make_move*****************************************
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
@@ -162,11 +162,16 @@ class quizz(remote.Service):
         game.put()
 
         if str(request.guess) == str(Answers[game.random_number_assigned]):
+            
             game.end_game(True)
             game.put()
-            #Below is done because of design constraints.
-            for score in Score.query():
-              score.cal_toprankings()
+
+            user = User.query(User.name == game.user.get().name).get()
+
+            user.total_average_points=user.total_average_points+10
+            user.total_guesses=user.total_guesses+5-game.attempts_remaining
+            
+            user.put()
 
             return game.to_form('You win!')
         else:
@@ -175,6 +180,12 @@ class quizz(remote.Service):
 
         if game.attempts_remaining < 1:
             game.end_game(False)
+            
+            user = User.query(User.name == game.user.get().name).get()
+            user.total_guesses=user.total_guesses+5-game.attempts_remaining
+            
+            user.put()
+            
             return game.to_form( 'Attempts over. Game over!')
         
     #**********************all_moves*****************************************
@@ -191,21 +202,18 @@ class quizz(remote.Service):
         return game.to_all_moves_form()
 
 
-    #************************get_top_rankings***************************************
+    #************************ranking_of_user***************************************
     @endpoints.method(request_message=RANK_REQUEST,
                       response_message=StringMessage,
                       path='toprankings',
-                      name='get_top_rankings',
+                      name='ranking_of_user',
                       http_method='GET')
-    def get_top_rankings(self, request):
-        """Return all top rankings"""
-
-        for score in Score.query():
-          score.cal_toprankings()
+    def ranking_of_user(self, request):
+        """Returns the ranking of the current user."""
 
         ranks = []
 
-        for user in User.query().order((-User.total_average_points)):
+        for user in User.query().order((-User.total_average_points)).order(User.total_guesses):
           ranks.append(user.name)
 
         rank = ranks.index(request.user_name) + 1
@@ -230,7 +238,7 @@ class quizz(remote.Service):
                       name='high_scores_scorecards',
                       http_method='GET')
     def high_scores_scorecards(self, request):
-        """Return high scores (scorecards with highest scores in descending order)"""
+        """Return high scores (scorecards with highest scores i.e. least number of guesses)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scores!!')
@@ -245,14 +253,14 @@ class quizz(remote.Service):
                       name='high_scores_users',
                       http_method='GET')
     def high_scores_users(self, request):
-        """Return high scores (users with highest scores in descending order)"""
+        """Return high scores (users with highest total points in descending order)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scores!!')
         topscores=[]
 
-        for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores):
-          topscores.append(score.user.get().name)
+        for user in User.query().order(-User.total_average_points).order(User.total_guesses).fetch(request.number_of_high_scores):
+          topscores.append(user.name)
 
         return StringMessage(message='Leader board in descending order is  {}'.format(topscores))
 

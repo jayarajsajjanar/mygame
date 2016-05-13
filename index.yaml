@@ -17,6 +17,12 @@ indexes:
 
 - kind: User
   properties:
+  - name: total_average_points
+    direction: desc
+  - name: total_guesses
+
+- kind: User
+  properties:
   - name: total_points
   - name: total_guesses
 
