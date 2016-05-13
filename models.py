@@ -1,6 +1,5 @@
 """models.py - This file contains the class definitions for the Datastore
-entities used by the Game. Because these classes are also regular Python
-classes they can include methods (such as 'to_form' and 'new_game')."""
+entities used by the Game. Major models are User,Game and Score. Functions are defined to operate on these models."""
 
 import random
 from datetime import date
@@ -12,8 +11,9 @@ class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
     email =ndb.StringProperty()
+    #The below are used in leader board/rankings.
     total_average_points=ndb.IntegerProperty(required=True)
-    total_guesses=ndb.IntegerProperty(required=True)
+    total_guesses=ndb.IntegerProperty(required=True) 
 
     def to_form_toprankings(self):
         return TopRankingForm(name=self.name, email=self.email, total_average_points=self.total_average_points, total_guesses=self.total_guesses)
@@ -27,6 +27,7 @@ class Game(ndb.Model):
     attempts_remaining = ndb.IntegerProperty(required=True, default = 5)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
+    #all_moves is a repeated property which enables it to act like a list to store multiple values.
     all_movess = ndb.StringProperty(repeated = True)
     random_number_assigned = ndb.IntegerProperty(required=True)
 
@@ -118,7 +119,6 @@ class NewGameForm(messages.Message):
     user_name = messages.StringField(1, required=True)
     attempts = messages.IntegerField(4, default = 5)
 
-
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
     guess = messages.StringField(1, required=True)
@@ -126,7 +126,6 @@ class MakeMoveForm(messages.Message):
 class AllMovesForm(messages.Message):
     """Used to display all moves of an existing game"""
     all_movess = messages.StringField(1,repeated=True)
-
 
 class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
@@ -154,8 +153,6 @@ class HighScoreForm(messages.Message):
     won = messages.BooleanField(4, required=True)
     guesses = messages.IntegerField(5, required=True)
 
-
-
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
     items = messages.MessageField(ScoreForm, 1, repeated=True)
@@ -163,7 +160,6 @@ class ScoreForms(messages.Message):
 class HighScoreForms(messages.Message):
     """Return multiple ScoreForms"""
     high_scores = messages.MessageField(HighScoreForm, 1, repeated=True)
-
 
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""

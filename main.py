@@ -17,7 +17,7 @@ class SendReminderEmail(webapp2.RequestHandler):
         Called every hour using a cron job"""
         app_id = app_identity.get_application_id()
        
-        #Checks if a game is pending. If it is, then a reminder mail is sent to the user.
+        #Checks if a game is pending. If it is, then a reminder mail is sent to the user every 10 minutes.
         games=Game.query(Game.game_over==False) #self.user.get().name
         
         for game in games:

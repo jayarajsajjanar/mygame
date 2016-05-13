@@ -1,7 +1,5 @@
-"""api.py - Create and configure the Game API exposing the resources.
-This can also contain game logic. For more complex games it would be wise to
-move game logic to another file. Ideally the API will be simple, concerned
-primarily with communication to/from the API's users."""
+"""api.py - This contains the game API exposing the resources.
+The game logic is also implemented here. The models are imported."""
 
 
 import logging
@@ -39,13 +37,14 @@ NUMBER_OF_HIGH_SCORES_USERS = endpoints.ResourceContainer(number_of_high_scores=
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-
+#Inventory for the quiz.
 Questions = ['How many states are there in USA?', 'What is the first name of current president of America?', 
               'Who won football world cup of 2014? ', 'In which year did first world war start?',
               'What is the currency of Bangladesh?', 'What is the capital of England?',
               'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
 Answers = ['50','barack','germany','1911','taka','london','thailand','366']
 
+#the name of the endpoint cannot contain upper case letters.
 @endpoints.api(name='quizz', version='v1')
 class quizz(remote.Service):
 
@@ -79,6 +78,7 @@ class quizz(remote.Service):
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
 
+        #Below logic implements random question assignment for each game.
         random_number = random.randint(0, len(Questions) - 1)
 
         try:
@@ -105,7 +105,7 @@ class quizz(remote.Service):
                       http_method='GET')
     def get_game(self, request):
         """Return the current game state."""
-        #Real game object is returned using key.
+        #Real game object is returned using its key.
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
             return game.to_form('Time to make a move!')
@@ -122,6 +122,7 @@ class quizz(remote.Service):
         """Cancels/deletes an unfinished game."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
+        #Game can be cancelled only if its still not completed.
         if game.game_over == False:
           game.key.delete()
           msg="The game is cancelled."
@@ -161,13 +162,14 @@ class quizz(remote.Service):
         game.attempts_remaining -= 1
         game.put()
 
+        #This 'if' implies that the game is won.
         if str(request.guess) == str(Answers[game.random_number_assigned]):
             
             game.end_game(True)
             game.put()
 
             user = User.query(User.name == game.user.get().name).get()
-
+            #Since game is won. Update both total_points and total_guesses.
             user.total_average_points=user.total_average_points+10
             user.total_guesses=user.total_guesses+5-game.attempts_remaining
             
@@ -180,7 +182,7 @@ class quizz(remote.Service):
 
         if game.attempts_remaining < 1:
             game.end_game(False)
-            
+            #Since the game was not won. Total_points is not updated.
             user = User.query(User.name == game.user.get().name).get()
             user.total_guesses=user.total_guesses+5-game.attempts_remaining
             
@@ -213,6 +215,7 @@ class quizz(remote.Service):
 
         ranks = []
 
+        #Logic - Users are sorted based on their total points. If total points clash, total_guesses is used.
         for user in User.query().order((-User.total_average_points)).order(User.total_guesses):
           ranks.append(user.name)
 
