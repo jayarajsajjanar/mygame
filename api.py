@@ -46,8 +46,8 @@ Questions = ['How many states are there in USA?', 'What is the first name of cur
               'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
 Answers = ['50','barack','germany','1911','taka','london','thailand','365']
 
-@endpoints.api(name='Quizz', version='v1')
-class Quizz(remote.Service):
+@endpoints.api(name='quizz', version='v1')
+class quizz(remote.Service):
 
     #************************create_user***************************************
     """Game API"""
@@ -296,4 +296,4 @@ class Quizz(remote.Service):
                          'The average moves remaining is {:.2f}'.format(average))
 
 
-api = endpoints.api_server([Quizz])
+api = endpoints.api_server([quizz])
