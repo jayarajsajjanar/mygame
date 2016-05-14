@@ -61,7 +61,7 @@ A user can have multiple games active at the same time. The games can be retriev
     - Returns: GameForms.
     - Description: Returns all games played by the user.
     
- - **make_move**
+- **make_move**
     - Path: 'game/{urlsafe_game_key}'
     - Method: PUT
     - Parameters: urlsafe_game_key, guess
@@ -97,14 +97,14 @@ A user can have multiple games active at the same time. The games can be retriev
     - Returns: ScoreForms
     - Description: Returns all of an individual User's score cards
 
- - **get_scores**
+- **get_scores**
     - Path: 'scores'
     - Method: GET
     - Parameters: None
     - Returns: ScoreForms.
     - Description: Returns all Scores cards in the database (unordered).
     
- - **get_user_scores**
+- **get_user_scores**
     - Path: 'scores/user/{user_name}'
     - Method: GET
     - Parameters: user_name
@@ -112,7 +112,7 @@ A user can have multiple games active at the same time. The games can be retriev
     - Description: Returns all Scores recorded by the provided player (unordered).
     Will raise a NotFoundException if the User does not exist.
     
- - **get_average_attempts**
+- **get_average_attempts**
     - Path: 'games/average_attempts'
     - Method: GET
     - Parameters: None
