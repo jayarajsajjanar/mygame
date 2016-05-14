@@ -18,6 +18,8 @@
 A user can have multiple games active at the same time. The games can be retrieved or played by using the path parameter
 `urlsafe_game_key`.
 
+A reminder mail will be sent for the users who have pending games every 10 minutes.
+
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.
  - app.yaml: App configuration.
