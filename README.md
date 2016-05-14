@@ -5,7 +5,12 @@
  in the App Engine admin console and would like to use to host your instance of this sample.
 1.  Run the app with the devserver using dev_appserver.py DIR, and ensure it's
  running by visiting the API Explorer - by default localhost:8080/_ah/api/explorer. 
- 
+
+## How to begin playing:
+1.  Visit localhost:8080/_ah/api/explorer where you will see multiple api endpoints exposed.
+1.  Create new user. Create new game. Note the question assigned. Copy the urlsafekey. Use `make_move` api and make move by 
+    guessing the answer. 
+1.  Explore other api endpoints for various other functionalities. 
  
 ##Game Description:
 `quizz` is a single player quiz game where random general knowledge questions from a database are asked to the player. Maximum of 5 attempts are allowed for the player to guess the correct answer. If the player guesses correctly, 10 points are assigned. If all the 5 attempts are consumed, game is ended and 0 points are awarded. 
