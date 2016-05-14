@@ -66,9 +66,13 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.put()
-        # Add the game to the score 'board'
-        score = Score(user=self.user, date=date.today(), won=won,
-                      guesses=self.attempts_allowed - self.attempts_remaining)
+        # Add the game to the score 'board' and since 
+        if won==True:
+            score = Score(user=self.user, date=date.today(), won=won,
+                          guesses=self.attempts_allowed - self.attempts_remaining,score_gained=10)
+        else:
+            score = Score(user=self.user, date=date.today(), won=won,
+                          guesses=self.attempts_allowed - self.attempts_remaining,score_gained=0)
         score.put()
 
     def delete_game(self):
@@ -83,10 +87,11 @@ class Score(ndb.Model):
     date = ndb.DateProperty(required=True)
     won = ndb.BooleanProperty(required=True)
     guesses = ndb.IntegerProperty(required=True)
+    score_gained=ndb.IntegerProperty(required=True)
 
     def to_form(self):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), guesses=self.guesses)
+                         date=str(self.date), guesses=self.guesses, score_gained=self.score_gained)
 
     def to_highscore_form(self):
         if self.won:
@@ -94,12 +99,7 @@ class Score(ndb.Model):
         else: 
             game_score=0
         return HighScoreForm(game_score=game_score,user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), guesses=self.guesses)
-
-    def to_form_toprankings(self):
-        return TopRankingForm(name=self.user.get().name, email=self.user.get().email, total_points=self.user.get().total_points, total_guesses=self.user.get().total_guesses)
-
-
+                         date=str(self.date), guesses=self.guesses,score_gained=self.score_gained)
 
 
 class GameForm(messages.Message):
@@ -133,17 +133,11 @@ class ScoreForm(messages.Message):
     date = messages.StringField(2, required=True)
     won = messages.BooleanField(3, required=True)
     guesses = messages.IntegerField(4, required=True)
+    score_gained = messages.IntegerField(5, required=True)
 
-class TopRankingForm(messages.Message):
-    """TopRankingForm for outbound top ranking information"""
-    name = messages.StringField(1, required=True)
-    email = messages.StringField(2, required=True)
-    total_points = messages.IntegerField(3, required=True, default=0)
-    total_guesses = messages.IntegerField(4, required=True, default=0)
-
-class TopRankingForms(messages.Message):
+class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
-    toprankings = messages.MessageField(TopRankingForm, 1, repeated=True)
+    score_cards = messages.MessageField(ScoreForm, 1, repeated=True)
 
 class HighScoreForm(messages.Message):
     """ScoreForm for outbound high Score information"""
@@ -152,13 +146,10 @@ class HighScoreForm(messages.Message):
     date = messages.StringField(3, required=True)
     won = messages.BooleanField(4, required=True)
     guesses = messages.IntegerField(5, required=True)
-
-class ScoreForms(messages.Message):
-    """Return multiple ScoreForms"""
-    items = messages.MessageField(ScoreForm, 1, repeated=True)
+    score_gained = messages.IntegerField(6, required=True)
 
 class HighScoreForms(messages.Message):
-    """Return multiple ScoreForms"""
+    """Return multiple HighScoreForm forms"""
     high_scores = messages.MessageField(HighScoreForm, 1, repeated=True)
 
 class StringMessage(messages.Message):

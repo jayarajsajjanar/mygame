@@ -11,7 +11,7 @@ from google.appengine.ext import ndb
 
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms, GameForms, HighScoreForms, TopRankingForms, AllMovesForm
+    ScoreForms, GameForms, HighScoreForms, AllMovesForm
 from utils import get_by_urlsafe
 import random
 
@@ -112,7 +112,7 @@ class quizz(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
-    #************************delete_game***************************************
+    #************************cancel_game***************************************
     @endpoints.method(request_message=DELETE_GAME_REQUEST,
                       response_message=StringMessage,
                       path='game/cancel',
@@ -207,7 +207,7 @@ class quizz(remote.Service):
     #************************ranking_of_user***************************************
     @endpoints.method(request_message=RANK_REQUEST,
                       response_message=StringMessage,
-                      path='toprankings',
+                      path='game/ranking_of_user',
                       name='ranking_of_user',
                       http_method='GET')
     def ranking_of_user(self, request):
@@ -231,23 +231,8 @@ class quizz(remote.Service):
                       name='get_scores',
                       http_method='GET')
     def get_scores(self, request):
-        """Return all scores"""
-        return ScoreForms(items=[score.to_form() for score in Score.query()])
-
-    #************************get_high_scores_scorecards***************************************
-    @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_SCORECARDS,
-                      response_message=HighScoreForms,
-                      path='highscores_scorecards',
-                      name='high_scores_scorecards',
-                      http_method='GET')
-    def high_scores_scorecards(self, request):
-        """Return high scores (scorecards with highest scores i.e. least number of guesses)"""
-        if not request.number_of_high_scores:
-            raise endpoints.NotFoundException(
-                    'Please specify the number of high scores!!')
-  
-        return HighScoreForms(high_scores=[score.to_highscore_form() for score in Score.query().order(Score.guesses).fetch(request.number_of_high_scores)])
-
+        """Return all score cards."""
+        return ScoreForms(score_cards=[score.to_form() for score in Score.query()])
 
     #************************get_high_scores_users***************************************
     @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_USERS,
@@ -256,16 +241,16 @@ class quizz(remote.Service):
                       name='high_scores_users',
                       http_method='GET')
     def high_scores_users(self, request):
-        """Return high scores (users with highest total points in descending order)"""
+        """Return high scoring users (users with cumulative highest total points in descending order, tie broken by lesser guesses.)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
-                    'Please specify the number of high scores!!')
+                    'Please specify the number of high scoring users!!')
         topscores=[]
 
         for user in User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores):
           topscores.append(user.name)
 
-        return StringMessage(message='Leader board in descending order is  {}'.format(topscores))
+        return StringMessage(message='Leader board/High scoring users in descending order is  {}'.format(topscores))
 
     #************************get_user_scores***************************************
     @endpoints.method(request_message=USER_REQUEST,
@@ -274,13 +259,13 @@ class quizz(remote.Service):
                       name='get_user_scores',
                       http_method='GET')
     def get_user_scores(self, request):
-        """Returns all of an individual User's scores"""
+        """Returns all of an individual User's score cards"""
         user = User.query(User.name == request.user_name).get()
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
         scores = Score.query(Score.user == user.key)
-        return ScoreForms(items=[score.to_form() for score in scores])
+        return ScoreForms(score_cards=[score.to_form() for score in scores])
 
 
     #*********************get_average_attempts******************************************
