@@ -37,12 +37,12 @@ NUMBER_OF_HIGH_SCORES_USERS = endpoints.ResourceContainer(number_of_high_scores=
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-#Inventory for the quiz.
+#Database for the quiz.
 Questions = ['How many states are there in USA?', 'What is the first name of current president of America?', 
               'Who won football world cup of 2014? ', 'In which year did first world war start?',
               'What is the currency of Bangladesh?', 'What is the capital of England?',
-              'Bangkok is the capital of which country?', 'What is the number of days in a leap year?']
-Answers = ['50','barack','germany','1911','taka','london','thailand','366']
+              'Bangkok is the capital of which country?', 'What is the number of days in a leap year?','Which is the largest planet in our solar system?']
+Answers = ['50','barack','germany','1911','taka','london','thailand','366','jupiter']
 
 #the name of the endpoint cannot contain upper case letters.
 @endpoints.api(name='quizz', version='v1')
@@ -60,6 +60,11 @@ class quizz(remote.Service):
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
+
+        if not request.user_name:
+            raise endpoints.NotFoundException(
+                    'Please input user_name field.')
+
         user = User(name=request.user_name, email=request.email,total_points=0, total_guesses=0)
         user.put()
         return StringMessage(message='User {} created!'.format(
@@ -82,7 +87,7 @@ class quizz(remote.Service):
         random_number = random.randint(0, len(Questions) - 1)
 
         try:
-            game = Game(parent = user.key).new_game(user.key,request.attempts,random_number)
+            game = Game(parent = user.key).new_game(user.key, random_number)
         except ValueError:
             raise endpoints.BadRequestException('Maximum must be greater '
                                                 'than minimum!')
@@ -153,6 +158,10 @@ class quizz(remote.Service):
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
+
+        if not request.guess:
+            raise endpoints.NotFoundException(
+                    'Please input guess field.')
 
         if game.game_over:
             return game.to_form('Game already over!')

@@ -10,8 +10,8 @@ from google.appengine.ext import ndb
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
-    email =ndb.StringProperty()
-    #The below are used in leader board/rankings.
+    email = ndb.StringProperty()
+    #The below are used in leaderboard/rankings.
     total_points=ndb.IntegerProperty(required=True)
     total_guesses=ndb.IntegerProperty(required=True) 
 
@@ -34,11 +34,11 @@ class Game(ndb.Model):
 
     @classmethod
     #classmethod is like static method(can call with class and instance as well) with 'cls' implicitly passed.
-    def new_game(cls, user,attempts,random_number_assigned):
+    def new_game(cls, user, random_number_assigned):
         """Creates and returns a new game"""
         game = Game(user=user,
-                    attempts_allowed=attempts,
-                    attempts_remaining=attempts,
+                    attempts_allowed=5,
+                    attempts_remaining=5,
                     game_over=False,
                     parent=user,
                     random_number_assigned=random_number_assigned)
@@ -95,7 +95,7 @@ class Score(ndb.Model):
 
     def to_highscore_form(self):
         if self.won:
-            game_score=12-2*self.guesses
+            game_score=10
         else: 
             game_score=0
         return HighScoreForm(game_score=game_score,user_name=self.user.get().name, won=self.won,
@@ -117,7 +117,7 @@ class GameForms(messages.Message):
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
-    attempts = messages.IntegerField(4, default = 5)
+    # attempts = messages.IntegerField(4, default = 5)
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
