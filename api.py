@@ -10,8 +10,8 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 
 from models import User, Game, Score
-from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms, GameForms, HighScoreForms, AllMovesForm
+from models import StringMessage, NewGameForm, GameForm,MakeMoveForm,\
+    ScoreForms, GameForms, HighScoreForms, Moves, MoveForm, MoveForms
 from utils import get_by_urlsafe
 import random
 
@@ -166,16 +166,27 @@ class quizz(remote.Service):
         if game.game_over:
             return game.to_form('Game already over!')
         
-        game.all_movess.append(str(request.guess))
+        
 
         game.attempts_remaining -= 1
         game.put()
 
         #This 'if' implies that the game is won.
         if str(request.guess) == str(Answers[game.random_number_assigned]):
-            
+            # game.all_movess.append(str(request.guess))
+            # game.results.append(str('You win!'))
             game.end_game(True)
+           
+            # m=Moves(move=str(request.guess),result='You win!')
+            
+            # m.put
+
+            # game.moves.append(m.get())
+            game.insert_move(move=str(request.guess),result='You win!')
+
             game.put()
+
+
 
             user = User.query(User.name == game.user.get().name).get()
             #Since game is won. Update both total_points and total_guesses.
@@ -187,10 +198,24 @@ class quizz(remote.Service):
             return game.to_form('You win!')
         else:
           if game.attempts_remaining >= 1:
+            # game.all_movess.append(str(request.guess))
+            # game.results.append(str('Try again!'))
+
+            # m=Moves()
+            # m.move=str(request.guess)
+            # m.result='Try Again!'
+            # m.put
+
+            # game.moves.append(m.get())
+            # game.put()
+            game.insert_move(move=str(request.guess),result='Try Again!')
+            game.put()
+
             return game.to_form('Try again!')
 
         if game.attempts_remaining < 1:
-            game.end_game(False)
+            game.end_game(False)  #No need to commit here.
+
             #Since the game was not won. Total_points is not updated.
             user = User.query(User.name == game.user.get().name).get()
             user.total_guesses=user.total_guesses+5-game.attempts_remaining
@@ -202,15 +227,28 @@ class quizz(remote.Service):
     #**********************all_moves*****************************************
 
     @endpoints.method(request_message=ALL_MOVES_REQUEST,
-                      response_message=AllMovesForm,
+                      #response_message=AllMovesForm,
+                      response_message=MoveForms,
                       path='game/all_moves/{urlsafe_game_key}',
                       name='all_moves',
                       http_method='GET')
     def all_moves(self, request):
         """Returns all moves of a current game"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        # user = User.query(User.name == request.user_name).get()
+        moves_of_game = Moves.query(Moves.game == game.key)
+        # new = []
 
-        return game.to_all_moves_form()
+        # for item in game.all_movess:
+        #   new.append(str(item))
+        # return game.to_all_moves_form()
+        # return StringMessage(message=new)
+        # return StringMessage(message='History for this game is  {}'.format(new))
+        # return MoveForms(items=[move.to_form() for move in game.moves])
+        return MoveForms(items=[individual_move.to_form() for individual_move in moves_of_game])
+
+
+
 
 
     #************************ranking_of_user***************************************

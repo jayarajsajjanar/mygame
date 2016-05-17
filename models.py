@@ -19,6 +19,30 @@ class User(ndb.Model):
         return TopRankingForm(name=self.name, email=self.email, total_points=self.total_points, total_guesses=self.total_guesses)
 
 
+class Moves(ndb.Model):
+    """User profile"""
+    move = ndb.StringProperty(required=True)
+    result = ndb.StringProperty(required = True)
+    game = ndb.KeyProperty(required=True, kind='Game')
+    # user = ndb.KeyProperty(required=True, kind='User')
+
+    def to_form(self):
+        """Returns a GameForm representation of the Game"""
+        form = MoveForm()
+        form.move = self.move
+        form.result = self.result
+        return form
+
+class MoveForm(messages.Message):
+    """MoveForm for outbound move state information"""
+    move = messages.StringField(1, required=True)
+    result = messages.StringField(2, required=True)
+
+class MoveForms(messages.Message):
+    """Return multiple ScoreForms"""
+    items = messages.MessageField(MoveForm, 1, repeated=True)
+    
+
 class Game(ndb.Model):
     """Game object"""
     #Matching is done using the database itself.(Q&A database). So no need of target.
@@ -28,14 +52,17 @@ class Game(ndb.Model):
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
     #all_moves is a repeated property which enables it to act like a list to store multiple values.
-    all_movess = ndb.StringProperty(repeated = True)
+    # all_movess = ndb.StringProperty(repeated = True)
+    # results=ndb.StringProperty(repeated = True)
     random_number_assigned = ndb.IntegerProperty(required=True)
+    # moves = ndb.KeyProperty(kind='Moves', repeated = True)
 
 
     @classmethod
     #classmethod is like static method(can call with class and instance as well) with 'cls' implicitly passed.
     def new_game(cls, user, random_number_assigned):
         """Creates and returns a new game"""
+        # moves = []
         game = Game(user=user,
                     attempts_allowed=5,
                     attempts_remaining=5,
@@ -55,11 +82,12 @@ class Game(ndb.Model):
         form.message = message
         return form
 
-    def to_all_moves_form(self):
-        """Returns a AllMovesForm to display all moves of a game"""
-        form = AllMovesForm()
-        form.all_movess = self.all_movess
-        return form
+    # def to_all_moves_form(self):
+    #     """Returns a AllMovesForm to display all moves of a game"""
+    #     form = AllMovesForm()
+    #     form.all_movess = self.all_movess
+    #     form.results=self.results
+    #     return form
 
     def end_game(self, won=False):
         """Ends the game - if won is True, the player won. - if won is False,
@@ -75,9 +103,13 @@ class Game(ndb.Model):
                           guesses=self.attempts_allowed - self.attempts_remaining,score_gained=0)
         score.put()
 
+    def insert_move(self, move, result):
+        """inserts move"""
+        moves=Moves(game=self.key, move=move, result=result)
+        moves.put()
+
     def delete_game(self):
-        """Ends the game - if won is True, the player won. - if won is False,
-        the player lost."""
+        """Deletes the game."""
         self.delete()
 
 
@@ -123,9 +155,10 @@ class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
     guess = messages.StringField(1, required=True)
 
-class AllMovesForm(messages.Message):
-    """Used to display all moves of an existing game"""
-    all_movess = messages.StringField(1,repeated=True)
+# class AllMovesForm(messages.Message):
+#     """Used to display all moves of an existing game"""
+#     all_movess = messages.StringField(1,repeated=True)
+#     results = messages.StringField(2,repeated=True)
 
 class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
