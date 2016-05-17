@@ -11,7 +11,8 @@ from google.appengine.ext import ndb
 
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, GameForm,MakeMoveForm,\
-    ScoreForms, GameForms, HighScoreForms, Moves, MoveForm, MoveForms
+    ScoreForms, GameForms, HighScoreForms, Moves, MoveForm, MoveForms,\
+    get_user_rankings_form, get_high_scores_form, get_high_scores_forms
 from utils import get_by_urlsafe
 import random
 
@@ -113,7 +114,10 @@ class quizz(remote.Service):
         #Real game object is returned using its key.
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
+          if game.game_over==False:
             return game.to_form('Time to make a move!')
+          else:
+            return game.to_form('Game already over!')
         else:
             raise endpoints.NotFoundException('Game not found!')
 
@@ -137,17 +141,17 @@ class quizz(remote.Service):
 
         return StringMessage(message=msg)
         
-    #************************user_games***************************************
+    #************************get_user_games***************************************
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=GameForms,
-                      path='game/user_games/{user_name}',
-                      name='user_games',
+                      path='game/get_user_games/{user_name}',
+                      name='get_user_gamess',
                       http_method='GET')
-    def user_games(self, request):
-        """Returns all games of the user."""
+    def get_user_games(self, request):
+        """Returns all ACTIVE games of the user."""
         cur_usr = User.query(User.name == request.user_name).get()
         
-        return GameForms(items=[game.to_form('user game!') for game in Game.query(Game.user == cur_usr.key)])
+        return GameForms(items=[game.to_form('user game!') for game in Game.query(Game.user == cur_usr.key,Game.game_over==False)])
 
     #**********************make_move*****************************************
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
@@ -224,19 +228,19 @@ class quizz(remote.Service):
             
             return game.to_form( 'Attempts over. Game over!')
         
-    #**********************all_moves*****************************************
+    #**********************get_game_history*****************************************
 
     @endpoints.method(request_message=ALL_MOVES_REQUEST,
                       #response_message=AllMovesForm,
                       response_message=MoveForms,
-                      path='game/all_moves/{urlsafe_game_key}',
-                      name='all_moves',
+                      path='game/get_game_history/{urlsafe_game_key}',
+                      name='get_game_history',
                       http_method='GET')
-    def all_moves(self, request):
+    def get_game_history(self, request):
         """Returns all moves of a current game"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         # user = User.query(User.name == request.user_name).get()
-        moves_of_game = Moves.query(Moves.game == game.key)
+        moves_of_game = Moves.query(Moves.game == game.key).order(Moves.time_created)
         # new = []
 
         # for item in game.all_movess:
@@ -251,13 +255,13 @@ class quizz(remote.Service):
 
 
 
-    #************************ranking_of_user***************************************
+    #************************get_user_rankings***************************************
     @endpoints.method(request_message=RANK_REQUEST,
-                      response_message=StringMessage,
-                      path='game/ranking_of_user',
-                      name='ranking_of_user',
+                      response_message=get_user_rankings_form,
+                      path='game/get_user_rankings/{user_name}',
+                      name='get_user_rankings',
                       http_method='GET')
-    def ranking_of_user(self, request):
+    def get_user_rankings(self, request):
         """Returns the ranking of the current user."""
 
         ranks = []
@@ -268,9 +272,15 @@ class quizz(remote.Service):
 
         rank = ranks.index(request.user_name) + 1
 
+        user_object = User.query(User.name == request.user_name).get()
+
+        return user_object.to_get_user_rankings_form(ranking=rank)
+
+        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgPAJDAsSBEdhbWUYgICAgICA8AsM
+        #game/user_games/{user_name}
+        # return StringMessage(message='Rank is {}'.format(rank))
 
 
-        return StringMessage(message='Rank is {}'.format(rank))
 
     #************************get_scores***************************************
     @endpoints.method(response_message=ScoreForms,
@@ -281,23 +291,29 @@ class quizz(remote.Service):
         """Return all score cards."""
         return ScoreForms(score_cards=[score.to_form() for score in Score.query()])
 
-    #************************get_high_scores_users***************************************
+    #************************get_high_scores***************************************
     @endpoints.method(request_message=NUMBER_OF_HIGH_SCORES_USERS,
-                      response_message=StringMessage,
-                      path='highscores_users',
-                      name='high_scores_users',
+                      response_message=get_high_scores_forms,
+                      path='get_highscores',
+                      name='get_high_scores',
                       http_method='GET')
-    def high_scores_users(self, request):
+    def get_high_scores(self, request):
         """Return high scoring users (users with cumulative highest total points in descending order, tie broken by lesser guesses.)"""
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scoring users!!')
-        topscores=[]
+        # topscores=[]
 
-        for user in User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores):
-          topscores.append(user.name)
+        # for user in User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores):
+        #   topscores.append(user.name)
 
-        return StringMessage(message='Leader board/High scoring users in descending order is  {}'.format(topscores))
+        return get_high_scores_forms\
+              (high_scores=\
+                [user.to_get_high_scores_form() \
+                for user in \
+                User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores)])
+
+        # return StringMessage(message='Leader board/High scoring users in descending order is  {}'.format(topscores))
 
     #************************get_user_scores***************************************
     @endpoints.method(request_message=USER_REQUEST,

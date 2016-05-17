@@ -3,10 +3,11 @@ entities used by the Game. Major models are User,Game and Score. Functions are d
 
 import random
 from datetime import date
+import datetime
 from protorpc import messages   
 from google.appengine.ext import ndb
 
-
+#*********************User Model*********************
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
@@ -15,15 +16,47 @@ class User(ndb.Model):
     total_points=ndb.IntegerProperty(required=True)
     total_guesses=ndb.IntegerProperty(required=True) 
 
-    def to_form_toprankings(self):
-        return TopRankingForm(name=self.name, email=self.email, total_points=self.total_points, total_guesses=self.total_guesses)
+    def to_get_user_rankings_form(self,ranking):
+        """Used to return user ranking"""
+        form = get_user_rankings_form()
+        form.name = self.name
+        form.ranking = ranking
+        form.total_points=self.total_points
+        return form
 
+    def to_get_high_scores_form(self):
+        """Used to return high score information"""
+        form = get_high_scores_form()
+        form.name=self.name
+        form.total_points=self.total_points
+        form.total_guesses=self.total_guesses
+        return form
+
+
+class get_user_rankings_form(messages.Message):
+    """Used to return user ranking"""
+    name = messages.StringField(1, required=True)
+    ranking = messages.IntegerField(2, required=True)
+    total_points = messages.IntegerField(3, required=True)
+
+class get_high_scores_form(messages.Message):
+    """Used to return high score information"""
+    name = messages.StringField(1, required=True)
+    total_points = messages.IntegerField(2, required=True)
+    total_guesses = messages.IntegerField(3, required=True)
+
+class get_high_scores_forms(messages.Message):
+    """Used to return high score information"""
+    high_scores = messages.MessageField(get_high_scores_form, 1, repeated=True)
+
+#*********************Moves Model*********************
 
 class Moves(ndb.Model):
     """User profile"""
     move = ndb.StringProperty(required=True)
     result = ndb.StringProperty(required = True)
     game = ndb.KeyProperty(required=True, kind='Game')
+    time_created=ndb.DateTimeProperty(required=True)
     # user = ndb.KeyProperty(required=True, kind='User')
 
     def to_form(self):
@@ -42,6 +75,7 @@ class MoveForms(messages.Message):
     """Return multiple ScoreForms"""
     items = messages.MessageField(MoveForm, 1, repeated=True)
     
+#*********************Game Model*********************
 
 class Game(ndb.Model):
     """Game object"""
@@ -105,34 +139,12 @@ class Game(ndb.Model):
 
     def insert_move(self, move, result):
         """inserts move"""
-        moves=Moves(game=self.key, move=move, result=result)
+        moves=Moves(game=self.key, move=move, result=result,time_created=datetime.datetime.now())
         moves.put()
 
     def delete_game(self):
         """Deletes the game."""
         self.delete()
-
-
-class Score(ndb.Model):
-    """Score object"""
-    user = ndb.KeyProperty(required=True, kind='User')
-    date = ndb.DateProperty(required=True)
-    won = ndb.BooleanProperty(required=True)
-    guesses = ndb.IntegerProperty(required=True)
-    score_gained=ndb.IntegerProperty(required=True)
-
-    def to_form(self):
-        return ScoreForm(user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), guesses=self.guesses, score_gained=self.score_gained)
-
-    def to_highscore_form(self):
-        if self.won:
-            game_score=10
-        else: 
-            game_score=0
-        return HighScoreForm(game_score=game_score,user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), guesses=self.guesses,score_gained=self.score_gained)
-
 
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
@@ -155,10 +167,27 @@ class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
     guess = messages.StringField(1, required=True)
 
-# class AllMovesForm(messages.Message):
-#     """Used to display all moves of an existing game"""
-#     all_movess = messages.StringField(1,repeated=True)
-#     results = messages.StringField(2,repeated=True)
+#*********************Score Model*********************
+
+class Score(ndb.Model):
+    """Score object"""
+    user = ndb.KeyProperty(required=True, kind='User')
+    date = ndb.DateProperty(required=True)
+    won = ndb.BooleanProperty(required=True)
+    guesses = ndb.IntegerProperty(required=True)
+    score_gained=ndb.IntegerProperty(required=True)
+
+    def to_form(self):
+        return ScoreForm(user_name=self.user.get().name, won=self.won,
+                         date=str(self.date), guesses=self.guesses, score_gained=self.score_gained)
+
+    def to_highscore_form(self):
+        if self.won:
+            game_score=10
+        else: 
+            game_score=0
+        return HighScoreForm(game_score=game_score,user_name=self.user.get().name, won=self.won,
+                         date=str(self.date), guesses=self.guesses,score_gained=self.score_gained)
 
 class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""

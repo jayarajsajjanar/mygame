@@ -15,6 +15,11 @@ indexes:
   - name: game_over
   - name: user
 
+- kind: Moves
+  properties:
+  - name: game
+  - name: time_created
+
 - kind: User
   properties:
   - name: total_average_points

@@ -61,8 +61,8 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     - Returns: StringMessage.
     - Description: Cancels/Deletes a currently unfinished game.
 
-- **user_games**
-    - Path: 'game/user_games/{user_name}'
+- **get_user_games**
+    - Path: 'game/get_user_games/{user_name}'
     - Method: GET
     - Parameters: user_name
     - Returns: GameForms.
@@ -76,8 +76,8 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     - Description: Accepts a 'guess' and returns the updated state of the game.
     If this causes a game to end, a corresponding Score entity will be created.
 
-- **all_moves**
-    - Path: 'game/all_moves/{urlsafe_game_key}'
+- **get_game_history**
+    - Path: 'game/get_game_history/{urlsafe_game_key}'
     - Method: GET
     - Parameters: urlsafe_game_key
     - Returns: AllMovesForm.
@@ -90,8 +90,8 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     - Returns: StringMessage
     - Description: Returns the ranking of the current user.
 
-- **high_scores_users**
-    - Path: 'highscores_users'
+- **get_high_scores**
+    - Path: 'get_high_scores'
     - Method: GET
     - Parameters: number of high scores 
     - Returns: StringMessage
@@ -137,6 +137,10 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     
  - **Score**
     - Records completed games. Associated with Users model via KeyProperty.
+
+ - **Moves**
+    - Stores the moves made in the particular game.
+
     
 ##Forms Included:
  - **GameForm**
