@@ -177,15 +177,10 @@ class quizz(remote.Service):
 
         #This 'if' implies that the game is won.
         if str(request.guess) == str(Answers[game.random_number_assigned]):
-            # game.all_movess.append(str(request.guess))
-            # game.results.append(str('You win!'))
+            
             game.end_game(True)
            
-            # m=Moves(move=str(request.guess),result='You win!')
-            
-            # m.put
-
-            # game.moves.append(m.get())
+            #To store the move made.
             game.insert_move(move=str(request.guess),result='You win!')
 
             game.put()
@@ -202,16 +197,7 @@ class quizz(remote.Service):
             return game.to_form('You win!')
         else:
           if game.attempts_remaining >= 1:
-            # game.all_movess.append(str(request.guess))
-            # game.results.append(str('Try again!'))
 
-            # m=Moves()
-            # m.move=str(request.guess)
-            # m.result='Try Again!'
-            # m.put
-
-            # game.moves.append(m.get())
-            # game.put()
             game.insert_move(move=str(request.guess),result='Try Again!')
             game.put()
 
@@ -239,20 +225,11 @@ class quizz(remote.Service):
     def get_game_history(self, request):
         """Returns all moves of a current game"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        # user = User.query(User.name == request.user_name).get()
+        
+        #All moves are filtered by particular 'game'. Then sorted by their datetime created.
         moves_of_game = Moves.query(Moves.game == game.key).order(Moves.time_created)
-        # new = []
-
-        # for item in game.all_movess:
-        #   new.append(str(item))
-        # return game.to_all_moves_form()
-        # return StringMessage(message=new)
-        # return StringMessage(message='History for this game is  {}'.format(new))
-        # return MoveForms(items=[move.to_form() for move in game.moves])
+  
         return MoveForms(items=[individual_move.to_form() for individual_move in moves_of_game])
-
-
-
 
 
     #************************get_user_rankings***************************************
@@ -264,6 +241,7 @@ class quizz(remote.Service):
     def get_user_rankings(self, request):
         """Returns the ranking of the current user."""
 
+        #Stores all the Users in sequence of their ranking.
         ranks = []
 
         #Logic - Users are sorted based on their total points. If total points clash, total_guesses is used.
@@ -275,11 +253,6 @@ class quizz(remote.Service):
         user_object = User.query(User.name == request.user_name).get()
 
         return user_object.to_get_user_rankings_form(ranking=rank)
-
-        #ahBkZXZ-Z2FtZWFwaS0xMjUzciILEgRVc2VyGICAgICAgPAJDAsSBEdhbWUYgICAgICA8AsM
-        #game/user_games/{user_name}
-        # return StringMessage(message='Rank is {}'.format(rank))
-
 
 
     #************************get_scores***************************************
@@ -302,10 +275,6 @@ class quizz(remote.Service):
         if not request.number_of_high_scores:
             raise endpoints.NotFoundException(
                     'Please specify the number of high scoring users!!')
-        # topscores=[]
-
-        # for user in User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores):
-        #   topscores.append(user.name)
 
         return get_high_scores_forms\
               (high_scores=\
@@ -313,7 +282,6 @@ class quizz(remote.Service):
                 for user in \
                 User.query().order(-User.total_points).order(User.total_guesses).fetch(request.number_of_high_scores)])
 
-        # return StringMessage(message='Leader board/High scoring users in descending order is  {}'.format(topscores))
 
     #************************get_user_scores***************************************
     @endpoints.method(request_message=USER_REQUEST,

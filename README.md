@@ -83,8 +83,8 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     - Returns: AllMovesForm.
     - Description: Returns all moves made by user in the current game.
 
-- **ranking_of_user**
-    - Path: 'game/ranking_of_user'
+- **get_user_rankings**
+    - Path: 'game/get_user_rankings/{user_name}'
     - Method: GET
     - Parameters: user_name
     - Returns: StringMessage
@@ -163,5 +163,10 @@ A reminder mail will be sent for the users who have pending games every 10 minut
     - Acts as a container for outbound high score information.
  - **HighScoreForms**
     - Multiple HighScoreForm container.
+ - **MoveForm**
+    - Acts as a container for outbound 'game history' information.
+ - **MoveForms**
+    - Multiple MoveForm container.
  - **StringMessage**
     - General purpose String container.
+ 

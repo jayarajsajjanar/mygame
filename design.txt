@@ -1,21 +1,23 @@
 ***Additional properties added to models***
-1) For my game "quizz" - existing models/classes of User,Game and Score were sufficient. Hence, no new models/classes were added. However, to implement functionalities like 'high scores','top ranking','all moves' etc, new properties were added and a few existing ones were modified. 
+1) For 'get_game_history', a new model named 'Moves' was implemented which was used to store the move made at every step of the game. Also, to implement functionalities like 'get_high_scores','get_user_rankings','get_game_history' etc, new properties were added and a few existing ones were modified. 
 
 2)In User model - 'total_guesses' and 'total_points' properties were added. These two properties were addded in 'User' model and not in 'Score' model because -- 'Score' model was intended to store individual games data and not cumulative ones. 
 
 'total_guesses' and 'total_points' i.e. cumulative unlike 'Score' model, are updated after every game finishes. 
 
-3)In Game model - 'all_moves' and 'random_number_assigned' were added. 'all_moves' was made a repeated property which enables it to act like a list to store multiple properties. 'random_number_assigned' is used to randomly assign a question for that particular game. 
-
-For 'all_moves' api endpoint, all the moves made by the player were supposed to be stored. This was enabled by the repeated property option for 'all_moves' property.
+3)In Game model -  'random_number_assigned' was added.'random_number_assigned' is used to randomly assign a question for that particular game. 
 
 4)'HighScoreForms' and 'HighScoreForm' forms were added to carry outbound high score information.
+
+5)'MoveForms' and 'MoveForm' was added to carry outbound 'Move' information.
 
 
 
 ***Implementing game logic***
 1)For the game 'quizz', providing random questions for the game was a challenge. Additional property 'random_number_assigned' was added in 'Game' model to make the randomly assigned question and answer accessbile throught the program. 
 
-2)Implementing the leaderboard too was a challenge as the cumulative points of the users were needed needed. This necessitated the need for additional properties for 'User' model.
+2)In 'get_game_history', the 'moves' returned were not in order. Hence, a DateTimeProperty field called 'time_created' was added and was used in ordering the query results. 
+
+2)Implementing the leaderboard too was a challenge as the cumulative points of the users were needed. This necessitated the need for additional properties for 'User' model.
 
 3)Mailing logic too was modified so that a mail is sent to the user with pending games every 10 minutes.

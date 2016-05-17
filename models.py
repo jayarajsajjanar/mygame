@@ -85,13 +85,8 @@ class Game(ndb.Model):
     attempts_remaining = ndb.IntegerProperty(required=True, default = 5)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
-    #all_moves is a repeated property which enables it to act like a list to store multiple values.
-    # all_movess = ndb.StringProperty(repeated = True)
-    # results=ndb.StringProperty(repeated = True)
     random_number_assigned = ndb.IntegerProperty(required=True)
-    # moves = ndb.KeyProperty(kind='Moves', repeated = True)
-
-
+   
     @classmethod
     #classmethod is like static method(can call with class and instance as well) with 'cls' implicitly passed.
     def new_game(cls, user, random_number_assigned):
@@ -163,9 +158,6 @@ class NewGameForm(messages.Message):
     user_name = messages.StringField(1, required=True)
     # attempts = messages.IntegerField(4, default = 5)
 
-class MakeMoveForm(messages.Message):
-    """Used to make a move in an existing game"""
-    guess = messages.StringField(1, required=True)
 
 #*********************Score Model*********************
 
@@ -213,6 +205,12 @@ class HighScoreForm(messages.Message):
 class HighScoreForms(messages.Message):
     """Return multiple HighScoreForm forms"""
     high_scores = messages.MessageField(HighScoreForm, 1, repeated=True)
+
+#******************************************************
+
+class MakeMoveForm(messages.Message):
+    """Used to make a move in an existing game"""
+    guess = messages.StringField(1, required=True)
 
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""
