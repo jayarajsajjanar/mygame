@@ -4,6 +4,7 @@ import logging
 from google.appengine.ext import ndb
 import endpoints
 
+
 def get_by_urlsafe(urlsafe, model):
     """Returns an ndb.Model entity that the urlsafe key points to. Checks
         that the type of entity returned is of the correct kind. Raises an
