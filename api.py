@@ -210,7 +210,7 @@ class quizz(remote.Service):
             if game.attempts_remaining >= 1:
 
                 game.insert_move(
-                    move=(str(request.guess)).lower(), result='Try Again!')
+                    move=(str(request.guess), result='Try Again!')
                 game.put()
 
                 return game.to_form('Try again!')
