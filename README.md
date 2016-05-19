@@ -1,5 +1,13 @@
 #Full Stack Nanodegree Project 4 - quizz
 
+## Key Things Learnt:
+1. Various concepts concerning scalability.
+1. Google App Engine - Exploration of Various features provided by the Google cloud platform and the app engine. Developing the python game API on App Engine. Requests handling and Google Proto RPC (http methods and data structures). Deploying the game on app engine cloud so that its visible on gameapi-1253.appspot.com
+1. Google cloud DataStore (ndb) - Creating the necessary models and configuring them accordingly.(like parent-child relationships, repeated property, value types etc) . CRUD operations on data and querying(ordering, filtering etc). Entity keys. Datastore indexes.
+1. Caching data. 
+1. Email functionality.
+1. Basic webapp2 framework for routing.
+
 ## Set-Up Instructions:
 1.  Update the value of application in app.yaml to the app ID you have registered
  in the App Engine admin console and would like to use to host your instance of this sample.
